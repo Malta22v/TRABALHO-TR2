@@ -181,6 +181,6 @@ O matplotlib está configurado para funcionar no WSL sem interface gráfica usan
 
 # Integrantes
 
-- Nome 1
-- Nome 2
-- Nome 3
+- Victor Rodrigues Malta - 222014124
+- Marcus Emanuel Carvalho Tenedini de Freitas - 222025960
+- Moises de Araújo Altounian - 200069306
