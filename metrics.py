@@ -18,11 +18,14 @@ def initialize_csv():
             "quality",
             "bytes_received",
             "download_time_s",
+            "buffer_time_s",
+            "buffer_can_play",
+            "rebuffer_event",
             "throughput_kbps"
         ])
 
 
-def save_metric(segment, result):
+def save_metric(segment, result, buffer_metrics: object):
 
     with open(CSV_FILE, mode="a", newline="") as file:
 
@@ -33,5 +36,11 @@ def save_metric(segment, result):
             result["quality"],
             result["bytes_received"],
             result["download_time_s"],
-            result["throughput_kbps"]
+            buffer_metrics.buffer_level,
+            buffer_metrics.buffer_can_play,
+            buffer_metrics.rebuffer_event,
+            result["buffer_can_play"],
+            result["rebuffer_event"],
+            result["throughput_kbps"],
+
         ])
