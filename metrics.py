@@ -39,8 +39,6 @@ def save_metric(segment, result, buffer_metrics: object):
             buffer_metrics.buffer_level,
             buffer_metrics.buffer_can_play,
             buffer_metrics.rebuffer_event,
-            result["buffer_can_play"],
-            result["rebuffer_event"],
             result["throughput_kbps"],
 
         ])
