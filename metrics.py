@@ -21,11 +21,18 @@ def initialize_csv():
             "buffer_time_s",
             "buffer_can_play",
             "rebuffer_event",
-            "throughput_kbps"
+            "throughput_kbps",
+            "jitter_network_ms",
+            "jitter_ewma_ms"
         ])
 
 
-def save_metric(segment, result, buffer_metrics: object):
+def save_metric(
+    segment,
+    result,
+    buffer_metrics,
+    jitter_metrics
+):
 
     with open(CSV_FILE, mode="a", newline="") as file:
 
@@ -40,5 +47,6 @@ def save_metric(segment, result, buffer_metrics: object):
             buffer_metrics.buffer_can_play,
             buffer_metrics.rebuffer_event,
             result["throughput_kbps"],
-
+            jitter_metrics["jitter_network_ms"],
+            jitter_metrics["jitter_ewma_ms"]
         ])
