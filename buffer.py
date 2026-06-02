@@ -12,7 +12,7 @@ class BufferManager:
         return self.buffer_level
     
     def __att_buffer_can_play(self, buffer_level: float)-> bool:
-        if buffer_level > 0.0:
+        if buffer_level > 2.0:
             self.buffer_can_play= True
             return self.buffer_can_play
         self.buffer_can_play= False
