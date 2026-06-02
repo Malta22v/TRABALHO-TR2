@@ -18,8 +18,10 @@ base_url = server["url"]
 representations = manifest["representations"]
 
 initialize_csv()
+print(manifest)
 
 print("\n=== BAIXANDO SEGMENTOS ===\n")
+
 
 # começa conservadoramente
 current_rep = representations[0]
