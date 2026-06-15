@@ -9,7 +9,10 @@ def download_segment(base_url, url_path, quality):
 
     start_time = time.perf_counter()
 
-    response = requests.get(full_url)
+    response = requests.get(
+        full_url,
+        timeout=5
+    )
 
     end_time = time.perf_counter()
 
@@ -21,7 +24,9 @@ def download_segment(base_url, url_path, quality):
 
     download_time = end_time - start_time
 
-    throughput_kbps = (bytes_received * 8) / download_time / 1000
+    throughput_kbps = (
+        bytes_received * 8
+    ) / download_time / 1000
 
     return {
         "quality": quality,
@@ -29,5 +34,4 @@ def download_segment(base_url, url_path, quality):
         "download_time_s": round(download_time, 3),
         "throughput_kbps": round(throughput_kbps, 2),
         "timestamp": datetime.now().isoformat()
-        
     }

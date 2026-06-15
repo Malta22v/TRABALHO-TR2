@@ -15,6 +15,7 @@ def initialize_csv():
 
         writer.writerow([
             "segment",
+            "server_id",
             "quality",
             "bytes_received",
             "download_time_s",
@@ -23,7 +24,9 @@ def initialize_csv():
             "rebuffer_event",
             "throughput_kbps",
             "jitter_network_ms",
-            "jitter_ewma_ms"
+            "jitter_ewma_ms",
+            "failover",
+            "failover_time_s"
         ])
 
 
@@ -31,7 +34,10 @@ def save_metric(
     segment,
     result,
     buffer_metrics,
-    jitter_metrics
+    jitter_metrics,
+    server_id,
+    failover=False,
+    failover_time=0.0
 ):
 
     with open(CSV_FILE, mode="a", newline="") as file:
@@ -40,6 +46,7 @@ def save_metric(
 
         writer.writerow([
             segment,
+            server_id,
             result["quality"],
             result["bytes_received"],
             result["download_time_s"],
@@ -48,5 +55,7 @@ def save_metric(
             buffer_metrics.rebuffer_event,
             result["throughput_kbps"],
             jitter_metrics["jitter_network_ms"],
-            jitter_metrics["jitter_ewma_ms"]
+            jitter_metrics["jitter_ewma_ms"],
+            failover,
+            round(failover_time, 3)
         ])
