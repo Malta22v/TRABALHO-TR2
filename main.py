@@ -1,19 +1,30 @@
-from manifest import load_manifest
-from downloader import download_segment
-from metrics import initialize_csv, save_metric
-from plot import plot_stream_metrics
-from buffer import BufferManager
-from abr import choose_quality
-from abr_buffer import choose_quality_buffer
-from jitter import JitterCalculator
-from server_manager import ServerManager
+from core.manifest import load_manifest
+from core.downloader import download_segment
+from core.buffer import BufferManager
+from core.jitter import JitterCalculator
+from core.server_manager import ServerManager
+
+from abr.abr import choose_quality
+from abr.abr_buffer import choose_quality_buffer
+from abr.abr_hybrid import choose_quality_hybrid
+
+from monitoring.metrics import (
+    initialize_csv,
+    save_metric
+)
+
+from monitoring.plot import (
+    plot_stream_metrics
+)
+
+
 
 from collections import deque
 from time import sleep
 
 import time
 
-ABR_POLICY = "BUFFER"   # RATE ou BUFFER
+ABR_POLICY = "HYBRID"   # RATE ou BUFFER ou HYBRID
 
 manifest = load_manifest()
 
@@ -141,22 +152,58 @@ try:
             failover_time
         )
 
-        print(f"Segmento {i + 1}")
-        print(result)
+        print("\n" + "=" * 60)
 
         print(
-            f"Jitter: {jitter_ms} ms | "
-            f"EWMA: {jitter_ewma_ms} ms"
+            f"SEGMENTO {i + 1} | "
+            f"POLÍTICA: {ABR_POLICY}"
+        )
+
+        print("=" * 60)
+
+        print(
+            f"Servidor ..........: "
+            f"{server_manager.get_server_id()}"
         )
 
         print(
-            f"Modo de download: "
-            f"{str_download_mode}"
+            f"Qualidade .........: "
+            f"{result['quality']}"
         )
 
         print(
-            f"Buffer: "
+            f"Bytes recebidos ...: "
+            f"{result['bytes_received']}"
+        )
+
+        print(
+            f"Download ..........: "
+            f"{result['download_time_s']} s"
+        )
+
+        print(
+            f"Throughput ........: "
+            f"{result['throughput_kbps']} kbps"
+        )
+
+        print(
+            f"Jitter ............: "
+            f"{jitter_ms} ms"
+        )
+
+        print(
+            f"Jitter EWMA .......: "
+            f"{jitter_ewma_ms} ms"
+        )
+
+        print(
+            f"Buffer ............: "
             f"{buffer_metrics.buffer_level:.2f} s"
+        )
+
+        print(
+            f"Modo Download .....: "
+            f"{str_download_mode}"
         )
 
         print()
@@ -187,11 +234,21 @@ try:
                 debug=DEBUG_ABR
             )
 
-        else:
+        if ABR_POLICY == "BUFFER":
 
             current_rep = choose_quality_buffer(
                 buffer_metrics.buffer_level,
                 representations
+            )
+
+        if ABR_POLICY == "HYBRID":
+
+            current_rep = choose_quality_hybrid(
+                avg_throughput_kbps=avg_throughput,
+                representations=representations,
+                buffer_level=buffer_metrics.buffer_level,
+                jitter_ewma_ms=jitter_ewma_ms,
+                debug=DEBUG_ABR
             )
 
         i += 1
