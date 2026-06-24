@@ -1,29 +1,31 @@
 class JitterCalculator:
 
     def __init__(self, alpha=0.3):
-        self.last_download_time = None
-        self.jitter_ms = 0.0
-        self.jitter_ewma_ms = 0.0
+        self.last_throughput = None
+        self.jitter_kbps = 0.0
+        self.jitter_ewma_kbps = 0.0
         self.alpha = alpha
 
-    def update(self, download_time_s):
+    def update(self, throughput_kbps):
 
-        if self.last_download_time is None:
-            self.last_download_time = download_time_s
+        if self.last_throughput is None:
+            self.last_throughput = throughput_kbps
             return 0.0, 0.0
 
-        self.jitter_ms = abs(
-            download_time_s - self.last_download_time
-        ) * 1000
-
-        self.jitter_ewma_ms = (
-            self.alpha * self.jitter_ms
-            + (1 - self.alpha) * self.jitter_ewma_ms
+        # Calcula a variação absoluta da capacidade da rede
+        self.jitter_kbps = abs(
+            throughput_kbps - self.last_throughput
         )
 
-        self.last_download_time = download_time_s
+        # Filtro EWMA para suavizar os picos de instabilidade
+        self.jitter_ewma_kbps = (
+            self.alpha * self.jitter_kbps
+            + (1 - self.alpha) * self.jitter_ewma_kbps
+        )
+
+        self.last_throughput = throughput_kbps
 
         return (
-            round(self.jitter_ms, 2),
-            round(self.jitter_ewma_ms, 2)
+            round(self.jitter_kbps, 2),
+            round(self.jitter_ewma_kbps, 2)
         )

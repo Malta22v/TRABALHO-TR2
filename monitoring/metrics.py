@@ -23,8 +23,8 @@ def initialize_csv():
             "buffer_can_play",
             "rebuffer_event",
             "throughput_kbps",
-            "jitter_network_ms",
-            "jitter_ewma_ms",
+            "jitter_network_kbps",
+            "jitter_ewma_kbps",
             "failover",
             "failover_time_s"
         ])
@@ -54,8 +54,8 @@ def save_metric(
             buffer_metrics.buffer_can_play,
             buffer_metrics.rebuffer_event,
             result["throughput_kbps"],
-            jitter_metrics["jitter_network_ms"],
-            jitter_metrics["jitter_ewma_ms"],
+            jitter_metrics["jitter_network_kbps"],
+            jitter_metrics["jitter_ewma_kbps"],
             failover,
             round(failover_time, 3)
         ])

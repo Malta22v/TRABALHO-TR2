@@ -145,18 +145,18 @@ def plot_stream_metrics(
 
     plt.plot(
         df["segment"],
-        df["jitter_network_ms"],
+        df["jitter_network_kbps"],
         label="Jitter Instantâneo"
     )
 
     plt.plot(
         df["segment"],
-        df["jitter_ewma_ms"],
+        df["jitter_ewma_kbps"],
         label="Jitter EWMA"
     )
 
     plt.xlabel("Segmento")
-    plt.ylabel("Jitter (ms)")
+    plt.ylabel("Jitter (kbps)")
 
     plt.title(
         "Jitter por Segmento"

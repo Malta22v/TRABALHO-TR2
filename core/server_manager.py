@@ -1,9 +1,6 @@
-import requests
-
-
 class ServerManager:
 
-    def __init__(self, servers):
+    def __init__(self, servers, health_checker=None):
 
         self.servers = sorted(
             servers,
@@ -11,6 +8,10 @@ class ServerManager:
         )
 
         self.current_index = 0
+        self.health_checker = (
+            health_checker
+            or self._default_health_checker
+        )
 
     def get_current_server(self):
 
@@ -24,34 +25,44 @@ class ServerManager:
 
         return self.get_current_server()["id"]
 
+    def _default_health_checker(self, server):
+
+        import requests
+
+        response = requests.get(
+            f"{server['url']}/health",
+            timeout=2
+        )
+
+        return response.status_code == 200
+
     def failover(self):
 
-        if self.current_index + 1 >= len(self.servers):
-            return None
+        total_servers = len(self.servers)
 
-        next_server = self.servers[
-            self.current_index + 1
-        ]
+        for offset in range(1, total_servers):
 
-        try:
+            candidate_index = (
+                self.current_index + offset
+            ) % total_servers
 
-            response = requests.get(
-                f"{next_server['url']}/health",
-                timeout=2
-            )
+            candidate = self.servers[candidate_index]
 
-            if response.status_code == 200:
+            try:
 
-                self.current_index += 1
+                if not self.health_checker(candidate):
+                    continue
+
+                self.current_index = candidate_index
 
                 print(
                     f"FAILOVER -> "
-                    f"{next_server['id']}"
+                    f"{candidate['id']}"
                 )
 
-                return next_server
+                return candidate
 
-        except:
-            pass
+            except Exception:
+                continue
 
         return None

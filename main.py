@@ -6,7 +6,12 @@ from core.server_manager import ServerManager
 
 from abr.abr import choose_quality
 from abr.abr_buffer import choose_quality_buffer
-from abr.abr_hybrid import choose_quality_hybrid
+from abr.abr_hybrid import (
+    choose_quality_hybrid,
+    median_throughput_for_hybrid
+)
+
+import statistics
 
 from monitoring.metrics import (
     initialize_csv,
@@ -44,6 +49,18 @@ representations = manifest["representations"]
 DEBUG_ABR = True
 THROUGHPUT_WINDOW = 5
 
+# ===== CONFIGURACAO DOS TESTES =====
+# Deixe False para executar o comportamento normal.
+ENABLE_FAILOVER_TEST = False
+FAILOVER_TEST_AFTER_SEGMENTS = 20
+
+# Use 0 para desativar o limite e rodar continuamente.
+MAX_SEGMENTS = 0
+
+# Deixe False para nao alterar artificialmente o buffer.
+ENABLE_EXTRA_DOWNLOAD_DELAY = False
+EXTRA_DOWNLOAD_DELAY_S = 1.5
+
 initialize_csv()
 
 print(manifest)
@@ -57,6 +74,7 @@ str_download_mode = "burst"
 throughput_history = deque(maxlen=THROUGHPUT_WINDOW)
 
 i = 0
+failover_test_triggered = False
 
 try:
 
@@ -66,6 +84,16 @@ try:
         failover_time = 0.0
 
         try:
+
+            if (
+                ENABLE_FAILOVER_TEST
+                and not failover_test_triggered
+                and i >= FAILOVER_TEST_AFTER_SEGMENTS
+            ):
+                failover_test_triggered = True
+                raise RuntimeError(
+                    "Falha simulada para teste de failover"
+                )
 
             result = download_segment(
                 base_url,
@@ -113,7 +141,13 @@ try:
 
         download_time_s = result["download_time_s"]
 
-        elapsed_time_s = download_time_s
+        elapsed_time_s = (
+            download_time_s
+            + failover_time
+        )
+
+        if ENABLE_EXTRA_DOWNLOAD_DELAY:
+            elapsed_time_s += EXTRA_DOWNLOAD_DELAY_S
 
         if str_download_mode == "on/off":
 
@@ -130,16 +164,16 @@ try:
             SEGMENT_TIME,
             elapsed_time_s
         )
-
-        jitter_ms, jitter_ewma_ms = (
+        jitter_kbps, jitter_ewma_kbps = (
             jitter_calculator.update(
-                download_time_s
+                result["throughput_kbps"]
             )
         )
 
+        # Atualizando os nomes das variáveis para o dicionário não quebrar o save_metric
         jitter_metrics = {
-            "jitter_network_ms": jitter_ms,
-            "jitter_ewma_ms": jitter_ewma_ms
+            "jitter_network_kbps": jitter_kbps,
+            "jitter_ewma_kbps": jitter_ewma_kbps
         }
 
         save_metric(
@@ -188,12 +222,12 @@ try:
 
         print(
             f"Jitter ............: "
-            f"{jitter_ms} ms"
+            f"{jitter_kbps} kbps"
         )
 
         print(
             f"Jitter EWMA .......: "
-            f"{jitter_ewma_ms} ms"
+            f"{jitter_ewma_kbps} kbps"
         )
 
         print(
@@ -207,15 +241,13 @@ try:
         )
 
         print()
-
+        
         throughput_history.append(
             result["throughput_kbps"]
         )
 
-        avg_throughput = (
-            sum(throughput_history)
-            / len(throughput_history)
-        )
+        # SUBSTITUIÇÃO: Média pela Mediana
+        median_throughput = statistics.median(throughput_history)
 
         str_download_mode = (
             buffer_metrics.download_mode()
@@ -226,32 +258,40 @@ try:
         )
 
         if ABR_POLICY == "RATE":
-
             current_rep = choose_quality(
-                avg_throughput,
+                median_throughput,
                 representations,
                 buffer_confidence,
                 debug=DEBUG_ABR
             )
 
         if ABR_POLICY == "BUFFER":
-
             current_rep = choose_quality_buffer(
                 buffer_metrics.buffer_level,
                 representations
             )
 
         if ABR_POLICY == "HYBRID":
-
-            current_rep = choose_quality_hybrid(
-                avg_throughput_kbps=avg_throughput,
-                representations=representations,
-                buffer_level=buffer_metrics.buffer_level,
-                jitter_ewma_ms=jitter_ewma_ms,
-                debug=DEBUG_ABR
+            median_throughput = median_throughput_for_hybrid(
+                throughput_history,
+                buffer_metrics.buffer_level
             )
 
+            current_rep = choose_quality_hybrid(
+                avg_throughput_kbps=median_throughput,
+                representations=representations,
+                buffer_level=buffer_metrics.buffer_level,
+                jitter_ewma_kbps=jitter_ewma_kbps, # Assumindo que você ajustou o nome da variável
+                debug=DEBUG_ABR
+            )
         i += 1
+
+        if MAX_SEGMENTS and i >= MAX_SEGMENTS:
+            print(
+                f"\nTeste encerrado apos "
+                f"{MAX_SEGMENTS} segmentos."
+            )
+            break
 
 except KeyboardInterrupt:
 
