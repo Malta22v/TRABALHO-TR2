@@ -29,7 +29,7 @@ from time import sleep
 
 import time
 
-ABR_POLICY = "HYBRID"   # RATE ou BUFFER ou HYBRID
+ABR_POLICY = "RATE"   # RATE ou BUFFER ou HYBRID
 
 manifest = load_manifest()
 
@@ -51,7 +51,7 @@ THROUGHPUT_WINDOW = 5
 
 # ===== CONFIGURACAO DOS TESTES =====
 # Deixe False para executar o comportamento normal.
-ENABLE_FAILOVER_TEST = False
+ENABLE_FAILOVER_TEST = True
 FAILOVER_TEST_AFTER_SEGMENTS = 20
 
 # Use 0 para desativar o limite e rodar continuamente.
@@ -170,10 +170,13 @@ try:
             )
         )
 
-        # Atualizando os nomes das variáveis para o dicionário não quebrar o save_metric
+        # jitter_network_kbps: variação inter-segmento (calculada pelo JitterCalculator)
+        # jitter_intra_ms: variação intra-segmento entre chunks (calculada pelo downloader)
+        # jitter_ewma_kbps: EWMA do jitter inter-segmento
         jitter_metrics = {
             "jitter_network_kbps": jitter_kbps,
-            "jitter_ewma_kbps": jitter_ewma_kbps
+            "jitter_ewma_kbps": jitter_ewma_kbps,
+            "jitter_intra_ms": result.get("jitter_intra_ms", 0.0)
         }
 
         save_metric(
@@ -221,13 +224,18 @@ try:
         )
 
         print(
-            f"Jitter ............: "
+            f"Jitter (inter) ....: "
             f"{jitter_kbps} kbps"
         )
 
         print(
             f"Jitter EWMA .......: "
             f"{jitter_ewma_kbps} kbps"
+        )
+
+        print(
+            f"Jitter (intra) ....: "
+            f"{result.get('jitter_intra_ms', 0.0)} ms"
         )
 
         print(
