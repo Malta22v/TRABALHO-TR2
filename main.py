@@ -29,7 +29,7 @@ from time import sleep
 
 import time
 
-ABR_POLICY = "RATE"   # RATE ou BUFFER ou HYBRID
+ABR_POLICY = "HYBRID"   # RATE ou BUFFER ou HYBRID
 
 manifest = load_manifest()
 
@@ -224,7 +224,7 @@ try:
         )
 
         print(
-            f"Jitter (inter) ....: "
+            f"Throughput(change).: "
             f"{jitter_kbps} kbps"
         )
 
