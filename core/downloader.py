@@ -7,6 +7,7 @@ def download_segment(base_url, url_path, quality):
 
     full_url = f"{base_url}{url_path}"
 
+    start_timestamp = datetime.now()
     start_time = time.perf_counter()
 
     response = requests.get(
@@ -15,6 +16,7 @@ def download_segment(base_url, url_path, quality):
     )
 
     end_time = time.perf_counter()
+    end_timestamp = datetime.now()
 
     response.raise_for_status()
 
@@ -33,5 +35,7 @@ def download_segment(base_url, url_path, quality):
         "bytes_received": bytes_received,
         "download_time_s": round(download_time, 3),
         "throughput_kbps": round(throughput_kbps, 2),
-        "timestamp": datetime.now().isoformat()
+        "segment_start_timestamp": start_timestamp.strftime("%Y-%m-%d %H:%M:%S.%f"),
+        "segment_end_timestamp": end_timestamp.strftime("%Y-%m-%d %H:%M:%S.%f"),
+        "timestamp": end_timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")
     }

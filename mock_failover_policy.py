@@ -59,6 +59,22 @@ def assert_failover_bidirectional():
     assert manager.get_server_id() == "server1"
 
 
+def assert_failback_to_primary():
+    health = MockHealth({"server2"})
+    manager = ServerManager(SERVERS, health_checker=health)
+
+    assert manager.failover()["id"] == "server2"
+    assert manager.get_server_id() == "server2"
+
+    assert manager.failback_to_primary() is None
+    assert manager.get_server_id() == "server2"
+
+    health.healthy_ids = {"server1", "server2"}
+
+    assert manager.failback_to_primary()["id"] == "server1"
+    assert manager.get_server_id() == "server1"
+
+
 def assert_hybrid_policy_high_buffer_filters_low_throughput():
     history = deque(
         [4200, 4300, 120, 4400, 4500],
@@ -96,6 +112,7 @@ def assert_hybrid_policy_low_buffer_uses_jitter_conservatively():
 
 if __name__ == "__main__":
     assert_failover_bidirectional()
+    assert_failback_to_primary()
     assert_hybrid_policy_high_buffer_filters_low_throughput()
     assert_hybrid_policy_low_buffer_uses_jitter_conservatively()
 

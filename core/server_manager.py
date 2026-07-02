@@ -25,6 +25,10 @@ class ServerManager:
 
         return self.get_current_server()["id"]
 
+    def is_on_primary(self):
+
+        return self.current_index == 0
+
     def _default_health_checker(self, server):
 
         import requests
@@ -66,3 +70,27 @@ class ServerManager:
                 continue
 
         return None
+
+    def failback_to_primary(self):
+
+        if self.is_on_primary():
+            return None
+
+        primary = self.servers[0]
+
+        try:
+
+            if not self.health_checker(primary):
+                return None
+
+            self.current_index = 0
+
+            print(
+                f"FAILBACK -> "
+                f"{primary['id']}"
+            )
+
+            return primary
+
+        except Exception:
+            return None

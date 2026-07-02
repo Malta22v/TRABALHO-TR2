@@ -1,0 +1,35 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{geometry}
+\geometry{margin=2cm}
+\title{Relatorio de Comparacao das Politicas ABR}
+\author{Projeto Final TR2}
+\date{24/06/2026}
+\begin{document}
+\maketitle
+
+\section{Resumo}
+Este relatorio compara tres politicas ABR: RATE, BUFFER e HYBRID. A execucao foi realizada com 30 segmentos por politica.
+
+\section{Resultados}
+\begin{tabular}{lrrrrrrl}
+\toprule
+Politica & Throughput & Buffer & Rebuffer & Failover & Trocas & Bitrate & Final\\
+\midrule
+RATE & 771,52 kbps & 12,58 s & 0 & 0 & 6 & 580,00 kbps & 480p\\
+BUFFER & 564,89 kbps & 9,86 s & 1 & 1 & 7 & 590,00 kbps & 720p\\
+HYBRID & 1200,33 kbps & 12,88 s & 0 & 0 & 3 & 1066,67 kbps & 1080p\\
+\bottomrule
+\end{tabular}
+
+\section{Analise}
+A politica RATE reage ao throughput, mas oscilou e terminou conservadora em 480p. A politica BUFFER decide apenas pelo nivel do buffer, o que causou rebuffer e failover nesta execucao. A politica HYBRID combinou throughput, buffer e jitter, sustentando 1080p com zero rebuffer.
+
+\section{Failover e mocks}
+O failover e implementado pelo ServerManager, que troca para um servidor saudavel quando o download falha. O arquivo mock_failover_policy.py usa MockHealth para validar failover bidirecional e cenarios da politica HYBRID sem depender da rede real.
+
+\end{document}

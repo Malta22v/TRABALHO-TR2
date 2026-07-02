@@ -14,6 +14,7 @@ env/
 logs/
 graphs/
 graphs_politica_2/
+output/pdf/*.pdf
 
 *.log
 *.tmp

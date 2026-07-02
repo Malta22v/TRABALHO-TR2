@@ -6,7 +6,7 @@ LOW_THROUGHPUT_FACTOR = 0.55
 HIGH_BUFFER_THROUGHPUT_MULTIPLIER = 2.0
 
 
-def median_throughput_for_hybrid(
+def average_throughput_for_hybrid(
     throughput_history,
     buffer_level
 ):
@@ -15,12 +15,12 @@ def median_throughput_for_hybrid(
     if not values:
         return 0.0
 
-    median = statistics.median(values)
+    average = statistics.mean(values)
 
     if buffer_level <= HIGH_BUFFER_THRESHOLD_S:
-        return median
+        return average
 
-    minimum_expected = median * LOW_THROUGHPUT_FACTOR
+    minimum_expected = average * LOW_THROUGHPUT_FACTOR
     filtered_values = [
         value
         for value in values
@@ -28,9 +28,19 @@ def median_throughput_for_hybrid(
     ]
 
     if len(filtered_values) >= 3:
-        return statistics.median(filtered_values)
+        return statistics.mean(filtered_values)
 
-    return median
+    return average
+
+
+def median_throughput_for_hybrid(
+    throughput_history,
+    buffer_level
+):
+    return average_throughput_for_hybrid(
+        throughput_history,
+        buffer_level
+    )
 
 
 def choose_quality_hybrid(
@@ -63,11 +73,11 @@ def choose_quality_hybrid(
 
     elif buffer_level >= 4.0:
         penalty = min(instability_ratio, 0.30)
-        estimated_bandwidth = avg_throughput_kbps * (1 - penalty) * 0.4
+        estimated_bandwidth = avg_throughput_kbps * (1 - penalty) * 0.85
         state_debug = "PERIGO (4s-8s)"
 
     else:
-        estimated_bandwidth = 0
+        estimated_bandwidth = avg_throughput_kbps * 0.60
         state_debug = "CRITICO (<4s)"
 
     chosen = representations[0]
